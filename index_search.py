@@ -20,8 +20,10 @@ class low_latency_matcher():
   def _load_data(self,table,key_col,display_cols):
     print(f"staging source data from table {table} for matching...")
     if key_col is not None:
-      df = spark.table(table).select(key_col,display_cols)
-      return df.toPandas().set_index(keys=key_col,inplace=True,drop=False)
+      select_cols = display_cols.copy()
+      select_cols.insert(0,key_col)
+      df = spark.table(table).select(select_cols)
+      return df.toPandas().set_index(keys=key_col,inplace=False,drop=False)
     else:
       df = spark.table(table)#.select(content_col)
       return df.toPandas().reset_index()
@@ -49,8 +51,8 @@ class low_latency_matcher():
     top_k = self._index.search(query_vector, k)
 #     print(f"top {k} index IDs: {top_k[1].tolist()}")
 #     print(top_k)
-    print('totaltime: {}'.format(time.time()-t))
-    results = self._df.iloc[[_ for _ in top_k[1].tolist()[0]]].copy()
+    print('total time: {}'.format(time.time()-t))
+    results = self._df.loc[[_ for _ in top_k[1].tolist()[0]]].copy()
     results['similarity'] = top_k[0].tolist()[0]
     return results
 

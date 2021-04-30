@@ -99,7 +99,7 @@ class text_vectorizer_indexer():
     embeddings_normalized = embeddings.copy()
     faiss.normalize_L2(embeddings_normalized)
     if self.index_on_key:
-      ids = self.raw_df[self.key_col]
+      ids = np.array(self.raw_df[self.key_col]).flatten().astype("int")
     else:
       ids = np.array(range(self.raw_df.shape[0]))
     index = faiss.IndexIDMap(faiss.IndexFlatIP(768))
@@ -133,25 +133,25 @@ class text_vectorizer_indexer():
 
 # COMMAND ----------
 
-# MAGIC %fs mkdirs dbfs:/tmp/tim.lortz@databricks.com/drug_review_index_test
+#%fs mkdirs dbfs:/tmp/tim.lortz@databricks.com/drug_review_index_test
 
 # COMMAND ----------
 
-# MAGIC %fs mkdirs dbfs:/tmp/tim.lortz@databricks.com/drug_review_embeddings_test
+#%fs mkdirs dbfs:/tmp/tim.lortz@databricks.com/drug_review_embeddings_test
 
 # COMMAND ----------
 
-tvi = text_vectorizer_indexer(table='tim_lortz_nlp.drug_reviews_bronze_test',content_col='review',key_col='a',\
-                              transformer_dir='/dbfs/tmp/tim.lortz@databricks.com/drug_review_transformer_test',\
-                              tokenizer_dir='/dbfs/tmp/tim.lortz@databricks.com/drug_review_tokenizer_test',\
-                              index_dir='/dbfs/tmp/tim.lortz@databricks.com/drug_review_index_test',\
-                              embeddings_dir='dbfs:/tmp/tim.lortz@databricks.com/drug_review_embeddings_test',\
-                              use_gpu=True,save_embeddings=True,index_on_key=False)
+# tvi = text_vectorizer_indexer(table='tim_lortz_nlp.drug_reviews_bronze_test',content_col='review',key_col='a',\
+#                               transformer_dir='/dbfs/tmp/tim.lortz@databricks.com/drug_review_transformer_test',\
+#                               tokenizer_dir='/dbfs/tmp/tim.lortz@databricks.com/drug_review_tokenizer_test',\
+#                               index_dir='/dbfs/tmp/tim.lortz@databricks.com/drug_review_index_test',\
+#                               embeddings_dir='dbfs:/tmp/tim.lortz@databricks.com/drug_review_embeddings_test',\
+#                               use_gpu=True,save_embeddings=True,index_on_key=False)
 
 # COMMAND ----------
 
-embeddings, index = tvi.transform()
+#embeddings, index = tvi.transform()
 
 # COMMAND ----------
 
-# MAGIC %fs ls dbfs:/tmp/tim.lortz@databricks.com/
+#%fs ls dbfs:/tmp/tim.lortz@databricks.com/
