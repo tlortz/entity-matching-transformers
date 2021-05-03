@@ -25,7 +25,7 @@ class low_latency_matcher():
       df = spark.table(table).select(select_cols)
       return df.toPandas().set_index(keys=key_col,inplace=False,drop=False)
     else:
-      df = spark.table(table)#.select(content_col)
+      df = spark.table(table).select(display_cols)
       return df.toPandas().reset_index()
 
   def _load_tokenizer(self,tokenizer_dir,max_sequence_length):
@@ -41,7 +41,7 @@ class low_latency_matcher():
   
   def _load_index(self,index_path):
     return faiss.read_index(index_path)
-
+  
   def match(self,query,k=5):
     t=time.time()
     input_text = "[CLS]"+query+"[SEP]"
@@ -49,8 +49,6 @@ class low_latency_matcher():
     query_vector = np.mean(raw_embeds[:,1:-1,:],axis=1).astype("float32").reshape(1,-1)
     faiss.normalize_L2(query_vector)
     top_k = self._index.search(query_vector, k)
-#     print(f"top {k} index IDs: {top_k[1].tolist()}")
-#     print(top_k)
     print('total time: {}'.format(time.time()-t))
     results = self._df.loc[[_ for _ in top_k[1].tolist()[0]]].copy()
     results['similarity'] = top_k[0].tolist()[0]

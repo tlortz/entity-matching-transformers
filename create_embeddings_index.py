@@ -35,10 +35,9 @@ class text_vectorizer_indexer():
     print(f"staging source data from table {table} for training...")
     if key_col is not None:
       df = spark.table(table).select(key_col,content_col)
-      return df.toPandas()#.dropna()
+      return df.toPandas()
     else:
       df = spark.table(table).select(content_col)
-#       return df.toPandas().dropna().reset_index()
       return df.toPandas().reset_index()
     
   def _load_tokenizer(self,tokenizer_dir,max_sequence_length):
@@ -52,17 +51,6 @@ class text_vectorizer_indexer():
       device = 0
     return pipeline("feature-extraction", model=transformer_dir, tokenizer=tokenizer, device=int(device))
   
-#   def _get_doc_embeddings(self,raw_text):
-#     print(len(raw_text))
-#     text = "[CLS]"+raw_text[:1200]+"[SEP]" #hard-coding string truncation until I get the tokenizer to truncate like it's supposed to...
-#     token_embeds = self.transformer(text)[0]
-#     doc_embeds = np.mean(token_embeds[1:-1],axis=0)
-#     return doc_embeds
-  
-#   def _create_embedding_array(self,text_list):
-#     print(f"creating embeddings vector for {self.raw_df.shape[0]} records...")
-#     return np.array([self._get_doc_embedding(t) for t in text_list])
-  
   def _create_embeddings(self):
     num_records = self.raw_df.shape[0]
     print(f"creating embeddings vector for {num_records} records...")
@@ -74,6 +62,7 @@ class text_vectorizer_indexer():
       end_range = min((i+1)*self.batch_size,num_records)
       print(f"processing records {start_range+1} through {end_range}")
       input_text = ["[CLS]"+t[:1200]+"[SEP]" for t in raw_text[start_range:end_range]]
+#       input_text = ["[CLS]"+t+"[SEP]" for t in raw_text[start_range:end_range]]
       raw_embeds = self.transformer(input_text)
       doc_embeds = [np.mean(e[1:-1],axis=0) for e in raw_embeds]
       results = results + doc_embeds
@@ -115,15 +104,7 @@ class text_vectorizer_indexer():
     path = os.path.join( self.index_dir, name)
     faiss.write_index(index,path)
   
-#   def _create_embedding_array(self):
-#     raw_embeds = self.transformer(input_text)
-#     doc_embeds = np.array([np.mean(e[1:-1],axis=0) for e in raw_embeds])
-#     print(f"created embeddings with dimension {doc_embeds.shape}")
-#     return doc_embeds
-  
   def transform(self):
-#     embeds = self._create_embedding_array(self.raw_df[self.content_col].tolist())
-#     return self._create_embedding_array()
     embeddings = self._create_embeddings()
     index = self._create_index(embeddings)
     if self.save_embeddings:
